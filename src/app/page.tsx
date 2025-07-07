@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Leaf, Fish } from "lucide-react";
 import FarmDashboard from "./components/FarmDashboard";
 import FisheryDashboard from "./components/FisheryDashboard";
+import AuthForm from "./components/AuthForm";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50">
-      <div className="container mx-auto px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 flex items-center justify-center ">
+      {/* <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             AgroSmart Management System
@@ -38,7 +39,9 @@ export default function Home() {
             <FisheryDashboard />
           </TabsContent>
         </Tabs>
-      </div>
+      </div> */}
+
+      <AuthForm />
     </main>
   );
 }
