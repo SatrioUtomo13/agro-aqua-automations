@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { User, Mail, Lock, Leaf, Fish } from "lucide-react";
 import { toast } from 'sonner'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 const loginSchema = z.object({
     email: z.string().email("Please enter a valid email address"),
@@ -32,6 +34,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 type RegisterFormData = z.infer<typeof registerSchema>
 
 const AuthForm = () => {
+    const router = useRouter()
 
     const loginForm = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
@@ -51,22 +54,46 @@ const AuthForm = () => {
         }
     })
 
-    const handleLogin = (data: LoginFormData) => {
-        console.log("Login attempt:", data);
-        toast("Login Attempt", {
-            description: `Attempting to login with email: ${data.email}`
-        })
+    const handleLogin = async (data: LoginFormData) => {
+        const { email, password } = data
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+        if (error) {
+            toast.error("Login failed", {
+                description: error.message
+            })
+        } else {
+            toast.success("Login successful", {
+                description: `Welcome back, ${email}`
+            })
+
+            router.push('/components/dashboard')
+        }
+
     }
 
-    const handleRegister = (data: RegisterFormData) => {
-        console.log("Register attempt:", data);
-        toast("Registration Attempt", {
-            description: `Creating account for: ${data.name}`
+    const handleRegister = async (data: RegisterFormData) => {
+        const { email, password, name } = data
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { name }
+            }
         })
 
+        if (error) {
+            toast.error("Registration failed", {
+                description: error.message
+            })
+        } else {
+            toast.success("Registration successful", {
+                description: `Please verify your email ${email}`
+            })
+        }
     }
     return (
-        <section className='w-full max-w-md'>
+        <section className='w-full max-w-md px-5 md:px-0'>
             <div className='text-center mb-8'>
                 <div className='flex items-center justify-center gap-2 mb-4'>
                     <Leaf className='w-8 h-8 text-green-600' />
@@ -131,6 +158,7 @@ const AuthForm = () => {
                                                     <div className='relative'>
                                                         <Lock className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
                                                         <Input
+                                                            type='password'
                                                             placeholder='Enter your email'
                                                             className='pl-10'
                                                             {...field}
@@ -142,11 +170,35 @@ const AuthForm = () => {
                                         )}
                                     />
 
-                                    <Button type='submit' className='w-full'>
+                                    <Button type='submit' className='w-full cursor-pointer'>
                                         Sign In
                                     </Button>
                                 </form>
                             </Form>
+
+                            <Button
+                                variant="outline"
+                                className="w-full cursor-pointer mt-3"
+                                onClick={async () => {
+                                    const { error } = await supabase.auth.signInWithOAuth({
+                                        provider: 'google',
+                                        options: {
+                                            redirectTo: `${window.location.origin}/components/dashboard`
+                                        }
+                                    })
+                                    if (error) {
+                                        toast.error("OAuth Error", { description: error.message })
+                                    }
+                                }}
+                            >
+                                <img
+                                    src="https://www.svgrepo.com/show/475656/google-color.svg"
+                                    alt="Google"
+                                    className="w-4 h-4"
+                                />
+                                Sign in with Google
+                            </Button>
+
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -251,7 +303,7 @@ const AuthForm = () => {
                                         )}
                                     />
 
-                                    <Button type='submit' className='w-full'>
+                                    <Button type='submit' className='w-full cursor-pointer'>
                                         Create Account
                                     </Button>
                                 </form>
